@@ -15,7 +15,6 @@ import { query } from 'express';
 export class LatihanController {
   @Get()
   findAll(@Query() query: any) {
-    console.log("query", query)
     return  {
         query,
     }
