@@ -10,21 +10,20 @@ import {
   Query,
 } from '@nestjs/common';
 import { query } from 'express';
+import { LatihanService } from './latihan.service';
 
 @Controller('latihan')
 export class LatihanController {
-  @Get()
-  findAll(@Query() query: any) {
-    return  {
-        query,
-    }
+  constructor(private latihanService: LatihanService) {}
+  @Post()
+  create() {
+    return this.latihanService.name();
   }
 
-  @Post()
-  create(@Body() payload: any) {
-    console.log('payload', payload);
+  @Get()
+  findAll(@Query() query: any) {
     return {
-      payload: payload,
+      query,
     };
   }
 
@@ -65,9 +64,9 @@ export class LatihanController {
   @Delete('delete/:id')
   delete(@Param('id') id: string) {
     return {
-    //   id,
-    //   metode: 'DELETE',
-    id : id
+      //   id,
+      //   metode: 'DELETE',
+      id: id,
     };
   }
 }
