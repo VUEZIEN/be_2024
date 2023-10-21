@@ -1,5 +1,5 @@
-import { PartialType, PickType } from "@nestjs/mapped-types";
-import { IsEmail, IsInt, IsString, Length, MinLength } from "class-validator";
+import { PartialType, PickType } from '@nestjs/mapped-types';
+import { IsEmail, IsInt, IsString, Length, MinLength } from 'class-validator';
 
 export class UserDto {
   @IsInt()
@@ -27,9 +27,9 @@ export class UserDto {
 }
 
 export class RegisterDto extends PickType(UserDto, [
-  "nama",
-  "email",
-  "password",
+  'nama',
+  'email',
+  'password',
 ]) {}
 
 export class LoginDto extends PickType(UserDto, ['email', 'password']) {}
