@@ -5,7 +5,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   port: 3306, //port default 3306 lihat xampp
   username: 'root', // username default xampp root
   password: '', // password default xampp string kosong
-  database: 'auth',
+  database: 'latihan_atuh',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   synchronize: true,
   logging: true,

@@ -1,4 +1,7 @@
-import { ResponseSuccess, ResponsePagination } from 'src/interface/response.interface';
+import {
+  ResponseSuccess,
+  ResponsePagination,
+} from 'src/interface/response.interface';
 
 class BaseResponse {
   _success(message: string, data?: any): ResponseSuccess {
