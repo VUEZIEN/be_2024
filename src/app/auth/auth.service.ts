@@ -34,9 +34,13 @@ export class AuthService extends BaseResponse {
     return this._success('Register Berhasil', reg);
   }
 
-  generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
+  private generateJWT(
+    payload: jwtPayload,
+    expiresIn: string | number,
+    secret_key: string,
+  ) {
     return this.jwtService.sign(payload, {
-      secret: token,
+      secret: secret_key,
       expiresIn: expiresIn,
     });
   }

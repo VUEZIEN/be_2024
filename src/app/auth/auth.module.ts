@@ -8,7 +8,15 @@ import { JwtAccessTokenStrategy } from './jwtAccessToken.strategy';
 import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), JwtModule.register({})],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    JwtModule.register({
+      global: true,
+      signOptions: {
+        algorithm: 'HS384',
+      },
+    }),
+  ],
   controllers: [AuthController],
   providers: [AuthService, JwtAccessTokenStrategy, JwtRefreshTokenStrategy],
 })
