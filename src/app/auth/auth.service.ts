@@ -7,18 +7,24 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import BaseResponse from 'src/utils/response/base.response';
 import { User } from './auth.entity';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 import { compare, hash } from 'bcrypt';
 import { ResponseSuccess } from 'src/interface';
 import { JwtService } from '@nestjs/jwt';
 import { jwt_config } from 'src/config/jwt.config';
 import { Repository } from 'typeorm';
+import { MailService } from '../mail/mail.service';
+import { ResetPassword } from '../mail/reset__password.entity';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService extends BaseResponse {
   constructor(
     @InjectRepository(User) private readonly authRepository: Repository<User>,
+    @InjectRepository(ResetPassword)
+    private readonly resetPasswordRepository: Repository<ResetPassword>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {
     super();
   }
@@ -167,5 +173,71 @@ export class AuthService extends BaseResponse {
       access_token: access_token,
       refresh_token: refresh_token,
     });
+  }
+  async forgotPassword(email: string): Promise<ResponseSuccess> {
+    const user = await this.authRepository.findOne({
+      where: {
+        email: email,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'Email tidak ditemukan',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+    const token = randomBytes(32).toString('hex');
+    const link = `http://localhost:5002/auth/reset-password/${user.id}/${token}`;
+    await this.mailService.sendForgotPassword({
+      email: email,
+      name: user.nama,
+      link: link,
+    });
+
+    const payload = {
+      user: {
+        id: user.id,
+      },
+      token: token,
+    };
+
+    await this.resetPasswordRepository.save(payload);
+
+    return this._success('Silahkan Cek Email');
+  }
+  async resetPassword(
+    user_id: number,
+    token: string,
+    payload: ResetPasswordDto,
+  ): Promise<ResponseSuccess> {
+    const userToken = await this.resetPasswordRepository.findOne({
+      where: {
+        token: token,
+        user: {
+          id: user_id,
+        },
+      },
+    });
+
+    if (!userToken) {
+      throw new HttpException(
+        'Token tidak valid',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    payload.new_password = await hash(payload.new_password, 12);
+    await this.authRepository.save({
+      password: payload.new_password,
+      id: user_id,
+    });
+    await this.resetPasswordRepository.delete({
+      user: {
+        id: user_id,
+      },
+    });
+
+    return this._success('Reset Passwod Berhasil, Silahkan login ulang');
   }
 }
