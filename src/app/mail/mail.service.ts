@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer'; //import MailerService
+import { MailerService } from '@nestjs-modules/mailer';
 import { MailResetPasswordDto } from './mail.dto';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class MailService {
 
   async sendForgotPassword(payload: MailResetPasswordDto) {
     await this.mailService.sendMail({
-      to: payload.email,
+      to: payload.email, //'ariiqmaazin@gmail.com'
       subject: 'Lupa Password',
       template: './lupa_password',
       context: {

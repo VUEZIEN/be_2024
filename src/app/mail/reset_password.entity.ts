@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../auth/auth.entity';
+import { User } from './../auth/auth.entity';
 
 @Entity()
 export class ResetPassword extends BaseEntity {
