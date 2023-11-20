@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import BaseResponse from 'src/utils/response/base.response';
 import { User } from './auth.entity';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 import { compare, hash } from 'bcrypt';
 import { ResponseSuccess } from 'src/interface';
 import { JwtService } from '@nestjs/jwt';
@@ -205,5 +205,41 @@ export class AuthService extends BaseResponse {
     await this.resetPasswordRepository.save(payload);
 
     return this._success('Silahkan Cek Email');
+  }
+  async resetPassword(
+    user_id: number,
+    token: string,
+    payload: ResetPasswordDto,
+  ): Promise<ResponseSuccess> {
+    const userToken = await this.resetPasswordRepository.findOne({
+      where: {
+        token: token,
+        user: {
+          id: user_id,
+        },
+      },
+    });
+
+    if (!userToken) {
+      throw new HttpException(
+        'Token tidak valid',
+        HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
+      );
+    }
+
+    payload.new_password = await hash(payload.new_password, 12); //hash password
+    await this.authRepository.save({
+      // ubah password lama dengan password baru
+      password: payload.new_password,
+      id: user_id,
+    });
+    await this.resetPasswordRepository.delete({
+      // hapus semua token pada tabel reset password yang mempunyai user_id yang dikirim, agar tidak bisa digunakan kembali
+      user: {
+        id: user_id,
+      },
+    });
+
+    return this._success('Reset Passwod Berhasil, Silahkan login ulang');
   }
 }
