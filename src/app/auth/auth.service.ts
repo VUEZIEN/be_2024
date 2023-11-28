@@ -188,7 +188,7 @@ export class AuthService extends BaseResponse {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
-    const token = randomBytes(32).toString('hex'); // membuat token
+    const token = randomBytes(32).toString('hex');
     const link = `http://localhost:3200/auth/reset-password/${user.id}/${token}`;
     await this.mailService.sendForgotPassword({
       email: email,
@@ -206,6 +206,7 @@ export class AuthService extends BaseResponse {
 
     return this._success('Silahkan Cek Email');
   }
+
   async resetPassword(
     user_id: number,
     token: string,
@@ -223,18 +224,16 @@ export class AuthService extends BaseResponse {
     if (!userToken) {
       throw new HttpException(
         'Token tidak valid',
-        HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
 
-    payload.new_password = await hash(payload.new_password, 12); //hash password
+    payload.new_password = await hash(payload.new_password, 12);
     await this.authRepository.save({
-      // ubah password lama dengan password baru
       password: payload.new_password,
       id: user_id,
     });
     await this.resetPasswordRepository.delete({
-      // hapus semua token pada tabel reset password yang mempunyai user_id yang dikirim, agar tidak bisa digunakan kembali
       user: {
         id: user_id,
       },
