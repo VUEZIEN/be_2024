@@ -189,7 +189,7 @@ export class AuthService extends BaseResponse {
       );
     }
     const token = randomBytes(32).toString('hex');
-    const link = `http://localhost:3200/auth/reset-password/${user.id}/${token}`;
+    const link = `http://localhost:4010/auth/reset-password/${user.id}/${token}`;
     await this.mailService.sendForgotPassword({
       email: email,
       name: user.nama,
