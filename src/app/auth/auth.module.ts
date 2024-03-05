@@ -8,8 +8,10 @@ import { JwtAccessTokenStrategy } from './jwtAccessToken.strategy';
 import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { jwt_config } from 'src/config/jwt.config';
+import { ConfigModule } from '@nestjs/config';
 import { ResetPassword } from '../mail/reset_password.entity';
 import { MailModule } from '../mail/mail.module';
+import { GoogleStrategy } from './google.strategy';
 
 @Module({
   imports: [
@@ -32,8 +34,15 @@ import { MailModule } from '../mail/mail.module';
       },
     }),
     MailModule,
+    PassportModule.register({ defaultStrategy: 'google' }),
+    ConfigModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessTokenStrategy, JwtRefreshTokenStrategy],
+  providers: [
+    AuthService,
+    JwtAccessTokenStrategy,
+    JwtRefreshTokenStrategy,
+    GoogleStrategy,
+  ],
 })
 export class AuthModule {}

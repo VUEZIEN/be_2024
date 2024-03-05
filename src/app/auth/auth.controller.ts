@@ -1,15 +1,20 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Post,
   Body,
   Req,
+  Res,
   UseGuards,
   Get,
   Param,
+  Redirect,
 } from '@nestjs/common';
 import { LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 import { AuthService } from './auth.service';
 import { JwtGuard, JwtGuardRefreshToken } from './auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -24,6 +29,15 @@ export class AuthController {
   async login(@Body() payload: LoginDto) {
     return this.authService.login(payload);
   }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleLogin(@Req() req: Request) {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  @Redirect('/admin')
+  async googleLoginCallback(@Req() req: Request, @Res() res: Response) {}
 
   @UseGuards(JwtGuard)
   @Get('profile')

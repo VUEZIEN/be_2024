@@ -11,6 +11,7 @@ import { UploadController } from './app/upload/upload.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
+import { KonsumenModule } from './app/konsumen/konsumen.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConfigModule } from '@nestjs/config';
     MailModule,
     KategoriModule,
     ProdukModule,
+    KonsumenModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],
