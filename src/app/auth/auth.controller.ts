@@ -9,12 +9,17 @@ import {
   UseGuards,
   Get,
   Param,
-  Redirect,
+  Put,
 } from '@nestjs/common';
-import { LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
+import {
+  LoginDto,
+  LoginWIthGoogleDTO,
+  RegisterDto,
+  ResetPasswordDto,
+} from './auth.dto';
 import { AuthService } from './auth.service';
 import { JwtGuard, JwtGuardRefreshToken } from './auth.guard';
-import { AuthGuard } from '@nestjs/passport';
+import { InjectUpdatedBy } from 'src/utils/decorator/inject-update_by.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -30,14 +35,15 @@ export class AuthController {
     return this.authService.login(payload);
   }
 
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleLogin(@Req() req: Request) {}
+  @Post('logingoogle')
+  async loginwithgoogle(@Body() payload: LoginWIthGoogleDTO) {
+    return this.authService.loginWithGoogle(payload);
+  }
 
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  @Redirect('/admin')
-  async googleLoginCallback(@Req() req: Request, @Res() res: Response) {}
+  @Get('getgoogledata/:id')
+  async getData(@Param('id') id: string) {
+    return this.authService.getDataloginGoogle(id);
+  }
 
   @UseGuards(JwtGuard)
   @Get('profile')

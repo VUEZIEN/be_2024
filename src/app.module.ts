@@ -12,6 +12,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { KonsumenModule } from './app/konsumen/konsumen.module';
+import { ProfileModule } from './app/profile/profile.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { KonsumenModule } from './app/konsumen/konsumen.module';
     KategoriModule,
     ProdukModule,
     KonsumenModule,
+    ProfileModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],

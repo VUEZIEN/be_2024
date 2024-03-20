@@ -6,8 +6,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import BaseResponse from 'src/utils/response/base.response';
-import { User } from './auth.entity';
-import { LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
+import { User, UserGoogle } from './auth.entity';
+import {
+  LoginDto,
+  LoginGoogleDto,
+  LoginWIthGoogleDTO,
+  RegisterDto,
+  ResetPasswordDto,
+} from './auth.dto';
 import { compare, hash } from 'bcrypt';
 import { ResponseSuccess } from 'src/interface';
 import { JwtService } from '@nestjs/jwt';
@@ -21,6 +27,8 @@ import { randomBytes } from 'crypto';
 export class AuthService extends BaseResponse {
   constructor(
     @InjectRepository(User) private readonly authRepository: Repository<User>,
+    @InjectRepository(UserGoogle)
+    private readonly userGoogleRepo: Repository<UserGoogle>,
     @InjectRepository(ResetPassword)
     private readonly resetPasswordRepository: Repository<ResetPassword>,
     private jwtService: JwtService,
@@ -116,6 +124,83 @@ export class AuthService extends BaseResponse {
     }
   }
 
+  async loginWithGoogle(payload: LoginWIthGoogleDTO) {
+    console.log(payload);
+
+    try {
+      const resDecode: any = this.jwtService.decode(payload.id_token);
+
+      if (resDecode.email == payload.email) {
+        const checkUserExists = await this.userGoogleRepo.findOne({
+          where: {
+            email: payload.email,
+          },
+          select: {
+            id: true,
+            nama: true,
+            email: true,
+            refresh_token: true,
+          },
+        });
+
+        if (checkUserExists == null) {
+          const jwtPayload: jwtPayload = {
+            id: payload.id,
+            nama: payload.nama,
+            email: payload.email,
+          };
+
+          const refresh_token = await this.generateJWT(
+            jwtPayload,
+            '7d',
+            jwt_config.refresh_token_secret,
+          );
+
+          await this.userGoogleRepo.save({
+            ...payload,
+            refresh_token,
+            id: payload.id,
+          });
+        }
+      }
+    } catch (error) {
+      console.log('err', error);
+      throw new HttpException('Ada Kesalahan', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async getDataloginGoogle(id: string) {
+    const checkUserExists = await this.userGoogleRepo.findOne({
+      where: {
+        id: id,
+      },
+      select: {
+        id: true,
+        nama: true,
+        email: true,
+        refresh_token: true,
+      },
+    });
+
+    const jwtPayload: jwtPayload = {
+      id: checkUserExists.id,
+      nama: checkUserExists.nama,
+      email: checkUserExists.email,
+    };
+
+    const access_token = await this.generateJWT(
+      jwtPayload,
+      '1d',
+      jwt_config.access_token_secret,
+    );
+
+    return this._success('Login Success', {
+      ...checkUserExists,
+      access_token: access_token,
+      role: 'siswa',
+    });
+  }
+
   async myProfile(id: number): Promise<ResponseSuccess> {
     const user = await this.authRepository.findOne({
       where: {
@@ -125,6 +210,7 @@ export class AuthService extends BaseResponse {
 
     return this._success('OK', user);
   }
+
   async refreshToken(id: number, token: string): Promise<ResponseSuccess> {
     const checkUserExists = await this.authRepository.findOne({
       where: {
@@ -153,13 +239,13 @@ export class AuthService extends BaseResponse {
 
     const access_token = await this.generateJWT(
       jwtPayload,
-      '1d',
+      '10d',
       jwt_config.access_token_secret,
     );
 
     const refresh_token = await this.generateJWT(
       jwtPayload,
-      '7d',
+      '1d',
       jwt_config.refresh_token_secret,
     );
 
@@ -240,5 +326,79 @@ export class AuthService extends BaseResponse {
     });
 
     return this._success('Reset Passwod Berhasil, Silahkan login ulang');
+  }
+
+  async loginGoogle(payload: LoginGoogleDto): Promise<ResponseSuccess> {
+    console.log(payload);
+    const checkUserExists = await this.authRepository.findOne({
+      where: {
+        email: payload.email,
+      },
+      select: {
+        id: true,
+        nama: true,
+        email: true,
+        password: true,
+        refresh_token: true,
+      },
+    });
+
+    if (checkUserExists === null) {
+      //register
+      const newUser = await this.authRepository.save(payload);
+      const jwtPayload: jwtPayload = {
+        id: newUser.id,
+        nama: newUser.nama,
+        email: newUser.email,
+      };
+      const access_token = await this.generateJWT(
+        jwtPayload,
+        '7d',
+        jwt_config.access_token_secret,
+      );
+      const refresh_token = await this.generateJWT(
+        jwtPayload,
+        '7d',
+        jwt_config.refresh_token_secret,
+      );
+
+      await this.authRepository.update(newUser.id, {
+        refresh_token: refresh_token,
+      });
+      return this._success('Registration Success', {
+        ...newUser,
+        access_token: access_token,
+        refresh_token: refresh_token,
+        role: 'Siswa',
+      });
+    } else {
+      const jwtPayload: jwtPayload = {
+        id: checkUserExists.id,
+        nama: checkUserExists.nama,
+        email: checkUserExists.email,
+      };
+
+      const access_token = await this.generateJWT(
+        jwtPayload,
+        '7d',
+        jwt_config.access_token_secret,
+      );
+      const refresh_token = await this.generateJWT(
+        jwtPayload,
+        '7d',
+        jwt_config.refresh_token_secret,
+      );
+      await this.authRepository.save({
+        refresh_token: refresh_token,
+        id: checkUserExists.id,
+      });
+
+      return this._success('Login Success', {
+        ...checkUserExists,
+        access_token: access_token,
+        refresh_token: refresh_token,
+        role: 'Siswa',
+      });
+    }
   }
 }

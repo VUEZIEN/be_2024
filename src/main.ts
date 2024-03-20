@@ -15,7 +15,7 @@ async function bootstrap() {
         enableImplicitConversion: true,
       },
     }),
-  ); //implementasi
+  );
   await app.listen(3200);
 }
 bootstrap();
