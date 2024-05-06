@@ -13,6 +13,9 @@ import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { KonsumenModule } from './app/konsumen/konsumen.module';
 import { ProfileModule } from './app/profile/profile.module';
+import { OrderModule } from './app/order/order.module';
+import { OrderDetailModule } from './app/order_detail/order_detail.module';
+import { UniqueValidator } from './utils/validator/unique.validator';
 
 @Module({
   imports: [
@@ -30,9 +33,11 @@ import { ProfileModule } from './app/profile/profile.module';
     ProdukModule,
     KonsumenModule,
     ProfileModule,
+    OrderModule,
+    OrderDetailModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService],
+  providers: [AppService, UniqueValidator],
   exports: [],
 })
 export class AppModule {}

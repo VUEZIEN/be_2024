@@ -46,7 +46,6 @@ export class AuthService extends BaseResponse {
     if (checkUserExists) {
       throw new HttpException('User already registered', HttpStatus.FOUND);
     }
-
     payload.password = await hash(payload.password, 12);
     const reg = await this.authRepository.save(payload);
 

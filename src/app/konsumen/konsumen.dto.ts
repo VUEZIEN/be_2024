@@ -14,6 +14,7 @@ import {
 } from 'class-validator';
 import { PageRequestDto } from 'src/utils/dto/page.dto';
 import { Konsumen } from './konsumen.entity';
+import { IsUnique } from 'src/utils/validator/unique.validator';
 
 export class KonsumenDto {
   @IsInt()
@@ -29,6 +30,7 @@ export class KonsumenDto {
 
   @IsString()
   @IsEmail()
+  @IsUnique([Konsumen, 'email'])
   email: string;
 
   @IsString()
