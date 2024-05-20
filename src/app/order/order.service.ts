@@ -66,6 +66,8 @@ export class OrderService extends BaseResponse {
       sampai_order_tanggal,
       status,
       nama_konsumen,
+      sort_by,
+      order_by,
     } = query;
 
     const filterQuery: any = [];
@@ -143,6 +145,11 @@ export class OrderService extends BaseResponse {
 
       skip: limit,
       take: pageSize,
+      order: {
+        // total_bayar: 'DESC',
+        // id: 'ASC',
+        [sort_by]: order_by,
+      },
     });
 
     // result.forEach((order) => {
@@ -233,7 +240,7 @@ export class OrderService extends BaseResponse {
     });
 
     if (!check)
-      throw new NotFoundException(`Buku dengan id ${id} tidak ditemukan`);
+      throw new NotFoundException(`Order dengan id ${id} tidak ditemukan`);
     await this.orderRepository.delete(id);
 
     return this._success('Berhasil menghapus');

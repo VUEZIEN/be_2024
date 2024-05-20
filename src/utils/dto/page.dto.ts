@@ -1,7 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional } from 'class-validator';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 
 export class PageRequestDto {
+  @IsString()
+  @IsOptional()
+  sort_by: string;
+
+  @IsString()
+  @IsOptional()
+  order_by: string;
+
   @IsInt()
   @Type(() => Number)
   page = 1;

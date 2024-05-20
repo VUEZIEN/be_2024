@@ -4,13 +4,15 @@ import {
   Get,
   Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { JwtGuard } from '../auth/auth.guard';
 import { InjectCreatedBy } from 'src/utils/decorator/inject-created_by.decorator';
-import { CreateOrderDto, findAllOrderDto } from './order.dto';
+import { CreateOrderDto, UpdateOrderDto, findAllOrderDto } from './order.dto';
 import { Pagination } from 'src/utils/decorator/pagination.decorator';
+import { InjectUpdatedBy } from 'src/utils/decorator/inject-update_by.decorator';
 
 @UseGuards(JwtGuard)
 @Controller('order')
@@ -20,6 +22,14 @@ export class OrderController {
   @Post('tambah')
   async createOrder(@InjectCreatedBy() payload: CreateOrderDto) {
     return this.orderService.createOrder(payload);
+  }
+
+  @Put('update/:id')
+  async updateOrder(
+    @Param('id') id: number,
+    @InjectUpdatedBy() payload: UpdateOrderDto,
+  ) {
+    return this.orderService.updateOrder(+id, payload);
   }
 
   @Get('list')
