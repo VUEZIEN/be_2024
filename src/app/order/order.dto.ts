@@ -37,6 +37,10 @@ export class OrderDto {
   @IsNotEmpty()
   konsumen_id: number;
 
+  @IsNumber()
+  @IsNotEmpty()
+  total_bayar: number;
+
   //   @IsNumber()
   //   @IsNotEmpty()
   //   total_bayar: number;

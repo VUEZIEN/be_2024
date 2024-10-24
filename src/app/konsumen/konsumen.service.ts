@@ -18,10 +18,8 @@ export class KonsumenService extends BaseResponse {
   async create(payload: CreateKonsumenDto): Promise<ResponseSuccess> {
     try {
       await this.konsumenRepository.save(payload);
-
       return this._success('OK');
     } catch (err) {
-      console.log('err', err);
       throw new HttpException('Ada Kesalahan', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }

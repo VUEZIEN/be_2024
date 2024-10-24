@@ -16,6 +16,11 @@ import { ProfileModule } from './app/profile/profile.module';
 import { OrderModule } from './app/order/order.module';
 import { OrderDetailModule } from './app/order_detail/order_detail.module';
 import { UniqueValidator } from './utils/validator/unique.validator';
+import { QueryBuilderModule } from './query-builder/query-builder.module';
+import { KafkaModule } from './kafka/kafka.module';
+import { RedisModule } from './redis/redis.module';
+import { WebsocketModule } from './app/websocket/websocket.module';
+import { ChatModule } from './app/chat/chat.module';
 
 @Module({
   imports: [
@@ -35,6 +40,11 @@ import { UniqueValidator } from './utils/validator/unique.validator';
     ProfileModule,
     OrderModule,
     OrderDetailModule,
+    QueryBuilderModule,
+    KafkaModule,
+    RedisModule,
+    WebsocketModule,
+    ChatModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, UniqueValidator],

@@ -13,6 +13,9 @@ import { Order } from './order.entity';
 import { CreateOrderDto, UpdateOrderDto, findAllOrderDto } from './order.dto';
 import { REQUEST } from '@nestjs/core';
 import { ResponsePagination, ResponseSuccess } from 'src/interface';
+import { KafkaService } from 'src/kafka/kafka.service';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class OrderService extends BaseResponse {
@@ -20,6 +23,8 @@ export class OrderService extends BaseResponse {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     @Inject(REQUEST) private req: any,
+    private readonly kafkaService: KafkaService,
+    private readonly redisService: RedisService,
   ) {
     super();
   }
@@ -55,7 +60,6 @@ export class OrderService extends BaseResponse {
       throw new HttpException('Ada Kesalahan', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
-
   async findAll(query: findAllOrderDto): Promise<ResponsePagination> {
     const {
       page,
@@ -165,6 +169,10 @@ export class OrderService extends BaseResponse {
   }
 
   async findById(id: number): Promise<ResponseSuccess> {
+    const cahceData = await this.redisService.getCacheKey(`order_${id}`);
+    if (cahceData) {
+      return this._success('get', cahceData);
+    }
     const result = await this.orderRepository.findOne({
       where: {
         id: id,
@@ -205,8 +213,36 @@ export class OrderService extends BaseResponse {
       },
     });
 
+    await this.redisService.setCacheKey({
+      key: `order_${id}`,
+      data: result,
+    });
+
     return this._success('OK', result);
   }
+  // async updateOrder(
+  //   id: number,
+  //   payload: UpdateOrderDto,
+  // ): Promise<ResponseSuccess> {
+  //   const check = await this.orderRepository.findOne({
+  //     where: {
+  //       id: id,
+  //     },
+  //   });
+
+  //   if (!check) {
+  //     throw new HttpException('Data tidak ditemukan', HttpStatus.NOT_FOUND);
+  //   }
+
+  //   payload.order_detail &&
+  //     payload.order_detail.forEach((item) => {
+  //       item.created_by = this.req.user.id;
+  //     });
+
+  //   const order = await this.orderRepository.save({ ...payload, id: id });
+
+  //   return this._success('OK', order);
+  // }
 
   async updateOrder(
     id: number,
@@ -229,6 +265,8 @@ export class OrderService extends BaseResponse {
 
     const order = await this.orderRepository.save({ ...payload, id: id });
 
+    // this.redisService.deleteCacheKey(`order_${id}`);
+
     return this._success('OK', order);
   }
 
@@ -244,5 +282,78 @@ export class OrderService extends BaseResponse {
     await this.orderRepository.delete(id);
 
     return this._success('Berhasil menghapus');
+  }
+
+  async sendOrderToKafka(payload: CreateOrderDto) {
+    await this.kafkaService.sendMessagewithEmit(
+      'order',
+      'order_key',
+      JSON.stringify(payload),
+    );
+  }
+
+  // async createOrderFromKafka(
+  //   payload: CreateOrderDto,
+  // ): Promise<ResponseSuccess> {
+  //   try {
+  //     const invoice = this.generateInvoice();
+  //     payload.nomor_order = invoice;
+
+  //     payload.order_detail &&
+  //       payload.order_detail.forEach((item) => {
+  //         item.created_by = { id: payload.created_by.id };
+  //       });
+
+  //     await this.orderRepository.save({
+  //       ...payload,
+  //       konsumen: {
+  //         id: payload.konsumen_id,
+  //       },
+  //     });
+
+  //     return this._success('OK');
+  //   } catch (err) {
+  //     console.log('err', err);
+  //     throw new HttpException('Ada Kesalahan', HttpStatus.UNPROCESSABLE_ENTITY);
+  //   }
+  // }
+  async createOrderFromKafka(
+    payload: CreateOrderDto,
+  ): Promise<ResponseSuccess> {
+    try {
+      const invoice = this.generateInvoice();
+      payload.nomor_order = invoice;
+
+      let total_bayar = 0;
+      payload.order_detail?.forEach((item) => {
+        item.created_by = { id: payload.created_by.id };
+        total_bayar += item.jumlah * item.jumlah_harga;
+      });
+
+      const { total_bayar: _, ...orderData } = payload;
+
+      await this.orderRepository.save({
+        ...orderData,
+        total_bayar: total_bayar,
+        konsumen: {
+          id: payload.konsumen_id,
+        },
+      });
+
+      return this._success('OK');
+    } catch (err) {
+      console.log('err', err);
+      throw new HttpException('Ada Kesalahan', HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+  }
+
+  async sendOrderToKafkaWithSend(payload: CreateOrderDto) {
+    const respons = await this.kafkaService.sendMessagewithSend(
+      'order',
+      'order_send',
+      JSON.stringify(payload),
+    );
+
+    return respons;
   }
 }
